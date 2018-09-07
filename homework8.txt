@@ -1,0 +1,136 @@
+1 Выберите фреймворк из списка: T4, Symfony, Zend Framework 2, Yii 2, Laravel
+
+Выбрал Laravel, т.к. в нём есть замечательная возможность - через тайпхинтинг автоматически подставлять объекты.
+
+2 Разверните на нем веб-приложение
+
+composer create-project --prefer-dist laravel/laravel ./
+Сделано.
+
+3 Реализуйте на выбор один из следующих проектов:
+  1 Фан-сайт вашей любимой музыкальной группы
+  2 Сайт, посвященный вашему любимому автору художественной литературы
+  3 Сайт про ваш коллектив (трудовой, или группу в институте, или класс в школе, или просто группу друзей)
+  4 * свободная тема, на выбор
+
+Выбрал фан-сайт музыкальной группы.
+
+4 Обязательные требования:
+  1 MVC
+  2 Админ-панель
+  3 База данных, миграции, модели, связи
+  4 Соответствие современным стандартам разработки
+
+
+Последовательность действий:
+
+1. Определяю содержимое сайта:
+- главная - история группы
+- альбомы и песни
+- админ-панель: добавление/удаление/редактирование альбома, песни.
+2. Создаю шаблоны /resources/views/ : главная, альбомы
+3. Создаю контроллеры /app/Http/Controllers/
+php artisan make:controller Index
+php artisan make:controller Albums
+4. Создаю маршруты до контроллеров /routes/web.php
+Проверено. Работает.
+5. Создаю модели php artisan make:model Song (/app/)
+и создаю связи между ними:
+- песня (часть альбома belongsTo() )
+- альбом (включает песни hasMany() )
+6. Настраиваю базу данных
+CREATE DATABASE homework8;
+в /.env :
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=homework8
+    DB_USERNAME=root
+    DB_PASSWORD=
+7. Создаю миграции с учётом связей моделей:
+    php artisan make:migration create_table_songs --create=songs
+    php artisan migrate
+    php artisan make:migration create_table_albums --create=albums
+    php artisan migrate
+8. Изменяю шаблон albums
+Проверено. Работает.
+9. Создаю админ-панель:
+- создаю шаблон
+- создаю контроллер
+- создаю маршрут
+- использую Автоматическое разрешение зависимостей
+- добавляю создание/редактирование/удаление песни (шаблоны, контроллеры, маршруты)
+- добавляю создание/редактирование/удаление альбома песен (шаблоны, контроллеры, маршруты)
+Проверено. Работает
+10. Добавляю валидацию данных из запроса сохранения песни/альбома
+валидацию выполняю в контроллере
+в шаблоне редактирования добавляю вывод ошибок валидации
+в контроллерах задаю свои сообщения ошибок при валидации
+Проверено. Работает.
+11. Исключения
+Часть исключительных ситуаций встроено в ларавел.
+изменяю страницу ответа 404.
+При любой ошибке всегда выдаю шаблон error и статус ошибки
+12. Авторизация админа
+Использую стандартные инструменты авторизации laravel
+php artisan make:auth
+Создались:
+- /app/Http/Controllers/HomeController.php
+- /resources/views/auth/ здесь шаблоны для всех видов аунтентификации
+- /resources/views/layouts/ здесь шаблон, базовый шаблон для аунтентификации
+- /resources/home.blade.php
+Контроллеры админ-панели наследую от HomeController
+Проверяю. Нужна таблица users.
+Создаю миграции:
+    php artisan make:migration create_table_users
+    php artisan make:migration create_table_password_resets
+запускаю
+    php artisan migrate
+Проверяю. При сбросе пароля - ошибка при Swift_TransportException()
+добавляю настройки эл. почты в /.env
+    MAIL_DRIVER=smtp
+    MAIL_HOST=smtp.mail.ru
+    MAIL_PORT=465
+    MAIL_USERNAME=no.test@inbox.ru
+    MAIL_PASSWORD=Y~7KdZ@RzT
+    MAIL_ENCRYPTION=ssl
+Проверяю. Опять ошибка при сбросе пароля
+Swift_TransportException (550) Expected response code 250 but got code "550", with message "550 not local sender over smtp "
+Странно. Проверяю все ли поля в конфиге есть.
+Сравниваю с /config/mail.php. Добавил 2 поля:
+    MAIL_FROM_ADDRESS=no.test@inbox.ru
+    MAIL_FROM_NAME="my server"
+Письмо отправилось. При переходе по ссылке сброса - опять ошибка - 404 Object not found!.
+http://localhost/password/reset/2f78bcf81978a118148eab7ef4ac92d5c1abd4d41f7d8dc2cb28ffda54e201af
+эм. почему localhost ? подставляю ручками php2.homework8.local - всё работает.
+изменяю поле /.env
+    APP_URL=http://php2.homework8.local (было localhost)
+Пробую. Да что. Опять
+http://localhost/password/reset/2f78bcf81978a118148eab7ef4ac92d5c1abd4d41f7d8dc2cb28ffda54e201af
+изменяю поле по умолчанию /config/app.php
+    'url' => env('APP_URL', 'http://php2.homework8.local'),
+Пробую, работает. Что за бред?!. Должен был взять это поле с конфига .env!
+изменяю поле по умолчанию /config/app.php на то что было ранее.
+изменяю поле /.env - заключаю url в кавычки
+    APP_URL="http://php2.homework8.local"
+Пробую. Работает. Отлично!
+13. Изменяю шаблоны авторизации /resources/views/auth/
+изменяю редикет контроллеров авторизации с '/home' на '/adminPanel'
+изменяю в /app/Http/Middleware/RedirectIfAuthenticate.php с '/home' на '/adminPanel'
+правлю /routes/web.php - удаляю маршрут /home
+14. Заполняю текст главной страницы.
+15. Добавляю фото альбома.
+ссылку на фото храню в базе данных.
+возможность изменения фото альбома
+создаю миграцию , чтобы домавить новую колонку image в таблицу albums базы
+изменил контроллеры/модели
+Проверил. работает.
+16. В /config/app.php изменил (браузер перевод предлагает).
+    'locale' => 'ru',
+17. Ограничиваю кол-во регистраций, делаю не больше 1.
+Реализую это в контроллере /app/Http/Controllers/Auth/RegisterController.php в конструкторе.
+18. Добавляю логирование исключительных ситуаций. Реализую в /app/Exceptions/Handler.php
+19. Проверяю работу всего ресурса. Лог в /storage/logs/laravel.log так же работает.
+
+Сделано. Чищу директорию  /public/images от изображений альбомов, т.к. базы данных не прикладываю - альбомов нет.
+гит игнорит .env, а там конфиг
